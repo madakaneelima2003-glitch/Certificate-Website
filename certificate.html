@@ -1,0 +1,211 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Sports Certificate Generator</title>
+  <style>
+    :root{--accent:#0b5ed7;--gold:#c99a2f}
+    body{font-family: Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial; margin:0; background:#f3f6fb; color:#122;}
+    .wrap{max-width:1200px;margin:28px auto;padding:20px;display:grid;grid-template-columns:360px 1fr;gap:20px}
+    .panel{background:#fff;border-radius:12px;box-shadow:0 6px 20px rgba(12,20,40,0.06);padding:18px}
+    h1{font-size:18px;margin:0 0 12px}
+    label{display:block;font-size:13px;margin:8px 0 6px}
+    input[type=text],select,input[type=date]{width:100%;padding:8px;border:1px solid #dde6f2;border-radius:6px;font-size:14px}
+    .row{display:flex;gap:8px}
+    .small{flex:1}
+    .btn{display:inline-block;padding:10px 14px;border-radius:8px;background:var(--accent);color:#fff;border:none;cursor:pointer;margin-top:10px}
+    .btn.ghost{background:#fff;color:var(--accent);border:1px solid #d4e0ff}
+
+    /* preview area */
+    .previewWrap{display:flex;align-items:center;justify-content:center;min-height:780px}
+    .certificate{width:820px;height:566px;background:#fff;padding:34px;box-shadow:0 10px 30px rgba(10,20,40,0.08);border-radius:8px;position:relative;overflow:hidden}
+    .cert-border{position:absolute;inset:12px;border-radius:6px;border:6px solid transparent;pointer-events:none}
+    .cert-inner{position:relative;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:space-between;padding:24px}
+    .topRow{width:100%;display:flex;justify-content:space-between;align-items:center}
+    .logo{width:110px;height:80px;object-fit:contain}
+    .title{font-size:28px;font-weight:700;color:#0b2140}
+    .subtitle{font-size:12px;color:#445}
+    .body{width:100%;text-align:center;padding:6px 40px}
+    .recipient{font-size:34px;font-weight:700;margin:6px 0;color:var(--accent)}
+    .role{font-size:15px;color:#223;margin-bottom:8px}
+    .details{font-size:14px;color:#444}
+    .decor{display:flex;gap:8px;align-items:center}
+    .signRow{width:100%;display:flex;justify-content:space-between;align-items:center;padding:10px 24px}
+    .sig{width:200px;text-align:center}
+    .sigLine{border-top:1px solid #bbb;margin-top:22px;padding-top:6px;font-size:13px}
+    .muted{font-size:12px;color:#6b7280}
+    /* print styles: only print the certificate area */
+    @media print{
+      body{background:#fff}
+      .wrap>*:not(.previewWrap){display:none}
+      .certificate{box-shadow:none;margin:0;border-radius:0;width:100%;height:100vh}
+      .cert-border{border-color:var(--gold)}
+    }
+
+    /* small screen */
+    @media (max-width:900px){.wrap{grid-template-columns:1fr;}.previewWrap{min-height:520px;padding:12px}.certificate{width:100%;height:auto}}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="panel">
+      <h1>Certificate Details</h1>
+      <label>Certificate Type</label>
+      <select id="certType" onchange="updatePreview()">
+        <option>Certificate of Participation</option>
+        <option>Certificate of Achievement</option>
+        <option>Sports Excellence Award</option>
+      </select>
+
+      <label>Participant Name</label>
+      <input id="nameInput" type="text" value="Neelu" oninput="updatePreview()">
+
+      <label>Son / Daughter of (Father & Mother)</label>
+      <input id="parentsInput" type="text" value="Son/Daughter of father & mother" oninput="updatePreview()">
+
+      <label>School / Club Name</label>
+      <input id="schoolInput" type="text" value="Greenfield High School" oninput="updatePreview()">
+
+      <label>Event / Sport</label>
+      <input id="eventInput" type="text" value="Inter-School Football Championship" oninput="updatePreview()">
+
+      <div class="row">
+        <div class="small">
+          <label>Date</label>
+          <input id="dateInput" type="date" value="2025-09-01" onchange="updatePreview()">
+        </div>
+        <div class="small">
+          <label>Venue</label>
+          <input id="venueInput" type="text" value="School Stadium" oninput="updatePreview()">
+        </div>
+      </div>
+
+      <label>Coach / Organizer Name</label>
+      <input id="coachInput" type="text" value="Coach R. Sharma" oninput="updatePreview()">
+
+      <label>Principal / Head Name</label>
+      <input id="principalInput" type="text" value="Ms. A. Kaur" oninput="updatePreview()">
+
+      <label>Upload Logo (left)</label>
+      <input id="logoLeft" type="file" accept="image/*" onchange="loadLogo(event,'left')">
+      <label>Upload Logo (right / sport icon)</label>
+      <input id="logoRight" type="file" accept="image/*" onchange="loadLogo(event,'right')">
+
+      <button class="btn" onclick="exportPDF()">Export to PDF / Print</button>
+      <button class="btn ghost" onclick="resetSample()">Reset Sample Values</button>
+
+      <hr style="margin:14px 0;border:none;border-top:1px dashed #e6eefc">
+      <p class="muted">Tip: Use the "Export to PDF" button to save as a printable PDF. You can upload your organization's logo(s) which will appear on the certificate.</p>
+    </div>
+
+    <div class="previewWrap">
+      <div class="certificate" id="certificate">
+        <div class="cert-border" id="certBorder"></div>
+        <div class="cert-inner" id="certInner">
+          <div class="topRow">
+            <img id="logoImgLeft" class="logo" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='300' height='200'><rect width='100%' height='100%' fill='%230b5ed7'/><text x='50%' y='55%' font-size='26' fill='white' text-anchor='middle' font-family='Arial'>LOGO</text></svg>" alt="Left Logo">
+            <div style="text-align:center">
+              <div class="subtitle" id="orgName">Greenfield High School</div>
+              <div class="title" id="certTitle">Certificate of Participation</div>
+              <div class="subtitle">Presented to</div>
+            </div>
+            <img id="logoImgRight" class="logo" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='120'><rect width='100%' height='100%' fill='%23c99a2f'/><text x='50%' y='55%' font-size='20' fill='white' text-anchor='middle' font-family='Arial'>SPORT</text></svg>" alt="Right Logo">
+          </div>
+
+          <div class="body">
+            <div class="recipient" id="recipientName">Neelu</div>
+            <div class="role" id="parentsText">Son/Daughter of father & mother</div>
+            <div class="details" id="awardText">For outstanding performance in Inter-School Football Championship.</div>
+            <div style="height:6px"></div>
+            <div class="muted">Held on <span id="dateText">01 Sep 2025</span> at <span id="venueText">School Stadium</span></div>
+          </div>
+
+          <div style="width:100%;display:flex;justify-content:space-between;align-items:center">
+            <div style="display:flex;flex-direction:column;align-items:flex-start;padding-left:14px">
+              <div class="muted">School / Club</div>
+              <div style="font-weight:700" id="schoolText">Greenfield High School</div>
+            </div>
+
+            <div style="display:flex;gap:18px;align-items:flex-end;padding-right:14px">
+              <div class="sig">
+                <div class="sigLine" id="coachText">Coach<br><span style="font-weight:600">Coach R. Sharma</span></div>
+              </div>
+              <div class="sig">
+                <div class="sigLine" id="principalText">Principal<br><span style="font-weight:600">Ms. A. Kaur</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function updatePreview(){
+      const type = document.getElementById('certType').value;
+      const name = document.getElementById('nameInput').value || '__________';
+      const parents = document.getElementById('parentsInput').value || '';
+      const school = document.getElementById('schoolInput').value || '';
+      const eventName = document.getElementById('eventInput').value || '';
+      const date = document.getElementById('dateInput').value;
+      const venue = document.getElementById('venueInput').value || '';
+      const coach = document.getElementById('coachInput').value || '';
+      const principal = document.getElementById('principalInput').value || '';
+
+      document.getElementById('certTitle').textContent = type;
+      document.getElementById('recipientName').textContent = name;
+      document.getElementById('parentsText').textContent = parents;
+      document.getElementById('schoolText').textContent = school;
+      document.getElementById('orgName').textContent = school;
+
+      document.getElementById('awardText').textContent = eventName ? `For outstanding performance in ${eventName}.` : '';
+      document.getElementById('dateText').textContent = date ? (new Date(date)).toLocaleDateString() : '';
+      document.getElementById('venueText').textContent = venue;
+      document.getElementById('coachText').innerHTML = `Coach<br><span style=\"font-weight:600\">${coach}</span>`;
+      document.getElementById('principalText').innerHTML = `Principal<br><span style=\"font-weight:600\">${principal}</span>`;
+
+      // change border color depending on type
+      const border = document.getElementById('certBorder');
+      if(type.toLowerCase().includes('achievement')) border.style.borderColor = '#0b5ed7';
+      else if(type.toLowerCase().includes('excellence')) border.style.borderColor = 'var(--gold)';
+      else border.style.borderColor = '#d1e4ff';
+    }
+
+    function loadLogo(e, side){
+      const file = e.target.files[0];
+      if(!file) return;
+      const reader = new FileReader();
+      reader.onload = function(ev){
+        if(side === 'left') document.getElementById('logoImgLeft').src = ev.target.result;
+        else document.getElementById('logoImgRight').src = ev.target.result;
+      }
+      reader.readAsDataURL(file);
+    }
+
+    function exportPDF(){
+      // Before print, hide controls via CSS @media print
+      window.print();
+    }
+
+    function resetSample(){
+      document.getElementById('certType').value = 'Certificate of Participation';
+      document.getElementById('nameInput').value = 'Neelu';
+      document.getElementById('parentsInput').value = 'Son/Daughter of father & mother';
+      document.getElementById('schoolInput').value = 'Greenfield High School';
+      document.getElementById('eventInput').value = 'Inter-School Football Championship';
+      document.getElementById('dateInput').value = '2025-09-01';
+      document.getElementById('venueInput').value = 'School Stadium';
+      document.getElementById('coachInput').value = 'Coach R. Sharma';
+      document.getElementById('principalInput').value = 'Ms. A. Kaur';
+      // reset logos to placeholders
+      document.getElementById('logoImgLeft').src = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='300' height='200'><rect width='100%' height='100%' fill='%230b5ed7'/><text x='50%' y='55%' font-size='26' fill='white' text-anchor='middle' font-family='Arial'>LOGO</text></svg>";
+      document.getElementById('logoImgRight').src = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='120'><rect width='100%' height='100%' fill='%23c99a2f'/><text x='50%' y='55%' font-size='20' fill='white' text-anchor='middle' font-family='Arial'>SPORT</text></svg>";
+      updatePreview();
+    }
+
+    // init
+    updatePreview();
+  </script>
+</body>
+</html>
