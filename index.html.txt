@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Sports Certificate Generator</title>
+  <style>
+    body { font-family: Arial, sans-serif; text-align: center; background: #f4f4f4; }
+    h2 { margin-top: 20px; }
+    .certificate {
+      width: 800px; height: 600px;
+      border: 5px solid #000; margin: 20px auto;
+      background: url('certificate-bg.png') no-repeat center/cover;
+      position: relative; padding: 50px;
+      display: none;
+    }
+    .name { font-size: 28px; font-weight: bold; margin-top: 200px; }
+    .parents { font-size: 20px; margin-top: 20px; }
+    button { padding: 10px 20px; font-size: 16px; margin-top: 10px; }
+  </style>
+</head>
+<body>
+  <h2>Sports Certificate Generator</h2>
+
+  <!-- Input Form -->
+  <input type="text" id="cname" placeholder="Candidate Name"><br><br>
+  <input type="text" id="fname" placeholder="Father Name"><br><br>
+  <input type="text" id="mname" placeholder="Mother Name"><br><br>
+  <button onclick="generate()">Generate Certificate</button>
+
+  <!-- Certificate Preview -->
+  <div id="certificate" class="certificate">
+    <div class="name" id="displayName"></div>
+    <div class="parents" id="displayParents"></div>
+  </div>
+
+  <!-- Online Libraries -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+  <!-- Script -->
+  <script>
+    function generate() {
+      let name = document.getElementById("cname").value;
+      let father = document.getElementById("fname").value;
+      let mother = document.getElementById("mname").value;
+
+      document.getElementById("displayName").innerText = name;
+      document.getElementById("displayParents").innerText =
+        "Son/Daughter of " + father + " & " + mother;
+
+      document.getElementById("certificate").style.display = "block";
+
+      html2canvas(document.getElementById("certificate")).then(canvas => {
+        const imgData = canvas.toDataURL("image/png");
+        const { jsPDF } = window.jspdf;
+        const pdf = new jsPDF('l', 'pt', [800,600]);
+        pdf.addImage(imgData, 'PNG', 0, 0, 800, 600);
+        pdf.save("sports_certificate.pdf");
+      });
+    }
+  </script>
+</body>
+</html>
